@@ -20,7 +20,7 @@ exports.timeIn = async (req, res) => {
 
     if (activeLog) {
       return res.status(400).json({ 
-        message: "Guest already has an active session",
+        message: "Guest is already timed in",
         timeLog: activeLog
       });
     }
@@ -44,6 +44,11 @@ exports.timeOut = async (req, res) => {
   try {
     const { guestId } = req.params;
 
+    const guest = await Guest.findByPk(guestId);
+    if (!guest) {
+      return res.status(404).json({ message: "Guest not found" });
+    }
+
     const activeLog = await TimeLog.findOne({
       where: {
         guest_id: guestId,
@@ -53,7 +58,7 @@ exports.timeOut = async (req, res) => {
     });
 
     if (!activeLog) {
-      return res.status(404).json({ message: "No active session found for this guest" });
+      return res.status(404).json({ message: "Please time in before timing out" });
     }
 
     activeLog.time_out = new Date();

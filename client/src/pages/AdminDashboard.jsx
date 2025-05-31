@@ -33,13 +33,23 @@ const AdminDashboard = () => {
 
   const handleTimeOut = async (guestId) => {
     try {
-      await axios.put(`http://localhost:3000/api/guests/${guestId}/timeout`);
-      toast.success("Time out recorded successfully");
-      fetchGuests();
+      const response = await axios.post(`http://localhost:3000/api/timelogs/timeout/${guestId}`);
+      
+      if (response.data && response.data.timeLog) {
+        toast.success("Time out recorded successfully");
+        await fetchGuests();
+      } else {
+        toast.warning("Unexpected response format");
+      }
     } catch (error) {
-      toast.error("Error recording time out");
-      console.error("Error:", error);
+      const errorMessage = error.response?.data?.message || "Error recording time out";
+      toast.error(errorMessage);
+      console.error("Timeout Error:", error);
     }
+  };
+
+  const isGuestLoggedIn = (guest) => {
+    return !guest.timeOut;
   };
 
   const filteredGuests = guests.filter((guest) => {
@@ -120,14 +130,14 @@ const AdminDashboard = () => {
                     {formatDate(guest.timeOut)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {!guest.timeOut && (
+                    {isGuestLoggedIn(guest) ? (
                       <button
                         onClick={() => handleTimeOut(guest.id)}
                         className="btn-primary"
                       >
                         Log Time Out
                       </button>
-                    )}
+                    ) : ""}
                   </td>
                 </tr>
               ))}
